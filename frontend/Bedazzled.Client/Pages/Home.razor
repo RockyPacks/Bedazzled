@@ -1,0 +1,164 @@
+﻿@page "/"
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Bedazzled Facepainting</PageTitle>
+
+<div class="bg-watercolor pb-5">
+    <!-- Hero Section -->
+    <section class="container py-5" style="min-height: 85vh; display: flex; align-items: center;" id="about">
+        <div class="row align-items-center w-100">
+            <div class="col-lg-6 mb-5 mb-lg-0" data-aos="fade-right">
+                <h1 class="display-3 fw-bold mb-3 brand-font text-gradient">Bringing Magic & Color to Your Event!</h1>
+                <p class="lead text-muted mb-4 pe-md-5">
+                    Welcome to <strong>Bedazzled Facepainting</strong>! We specialize in transforming little faces into fantastical creations, from roaring lions to sparkling fairies. Let us paint your day bright and beautiful!
+                </p>
+                <a href="#contact" class="btn custom-btn rounded-pill px-5 py-3 fs-5 floating-3d d-inline-block">Book Now</a>
+            </div>
+            <div class="col-lg-6 text-center" data-aos="fade-left">
+                <!-- Composed hero imagery replacing cartoonish illustration with actual assets -->
+                <div class="position-relative p-4" style="perspective: 1000px; height: 400px;">
+                    <img src="assets/face1.jpeg" class="img-fluid rounded-circle floating-3d shadow-lg position-absolute" style="width: 250px; height: 250px; object-fit: cover; border: 8px solid white; z-index: 2; top: 10%; right: 25%;" alt="Face painting example 1"/>
+                    <img src="assets/face2.jpeg" class="img-fluid rounded-circle floating-3d-slow shadow-lg position-absolute" style="width: 180px; height: 180px; object-fit: cover; border: 6px solid white; top: -10%; right: 5%; z-index: 1;" alt="Face painting example 2"/>
+                    <img src="assets/face3.jpeg" class="img-fluid rounded-circle floating-3d shadow-lg position-absolute" style="width: 150px; height: 150px; object-fit: cover; border: 6px solid white; bottom: -5%; left: 15%; z-index: 3;" alt="Face painting example 3"/>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="container py-5 mt-3" id="services">
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-5" data-aos="fade-up" data-aos-delay="100">
+                <div class="glass-card p-5 text-center h-100 position-relative overflow-hidden">
+                    <div class="mb-3 fs-1" style="color:#ffb6c1;"><i class="fa-solid fa-cake-candles"></i></div>
+                    <h3 class="fw-bold mb-3 brand-font">Birthday Party <br/> Face Painting</h3>
+                    <p class="text-muted">Make your child's birthday party unforgettable with our delightful face painting services. We create magic for the special day!</p>
+                    <a href="#contact" class="btn btn-outline-dark rounded-pill mt-3 px-4">View More</a>
+                </div>
+            </div>
+            <div class="col-md-5" data-aos="fade-up" data-aos-delay="200">
+                <div class="glass-card p-5 text-center h-100 position-relative overflow-hidden">
+                    <div class="mb-3 fs-1" style="color:#add8e6;"><i class="fa-solid fa-snowflake"></i></div>
+                    <h3 class="fw-bold mb-3 brand-font">Holiday and Seasonal <br/> Face Painting</h3>
+                    <p class="text-muted">Make your holiday and seasonal events unforgettable with Bedazzled! Our team is ready for any theme.</p>
+                    <a href="#contact" class="btn btn-outline-dark rounded-pill mt-3 px-4">View More</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- My Creations -->
+    <section class="container py-5 mt-5 text-center" id="creations">
+        <h2 class="display-5 fw-bold mb-3 brand-font" data-aos="fade-down">My Creations</h2>
+        <p class="text-muted mb-5 lead" data-aos="fade-up">Browse our gallery to see the enchanting transformations we've created for everyone!</p>
+        
+        <div class="row g-3">
+            @for (int i = 4; i <= 13; i++)
+            {
+                var delay = (i % 3) * 100;
+                <div class="col-6 col-md-4 col-lg-2" data-aos="zoom-in" data-aos-delay="@delay">
+                    <div class="grid-item shadow-sm form-control-plaintext p-0" style="aspect-ratio: 1/1;">
+                        <img src="assets/face@(i).jpeg" alt="Creation" />
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="container py-5 mt-5" id="testimonials">
+        <div class="text-center mb-5" data-aos="fade-down">
+            <h2 class="display-5 fw-bold brand-font">What my happy customers had to say</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4" data-aos="flip-left" data-aos-delay="100">
+                <div class="testimonial-card border-top border-4 border-info">
+                    <p class="text-muted fst-italic">"Bedazzled Facepainting was a huge hit at our daughter's birthday party! The designs were so beautiful and detailed, and the kids were thrilled. Highly recommend!"</p>
+                    <div class="text-warning mb-2">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <h6 class="fw-bold mb-0" style="color: #ffb6c1;">Jessica L.</h6>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="flip-left" data-aos-delay="200">
+                <div class="testimonial-card border-top border-4 border-warning">
+                    <p class="text-muted fst-italic">"We had Bedazzled Facepainting at our company's family day, and they were amazing! The artists were professional and handled the large crowd with ease."</p>
+                    <div class="text-warning mb-2">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <h6 class="fw-bold mb-0" style="color: #add8e6;">Mark R.</h6>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="flip-left" data-aos-delay="300">
+                <div class="testimonial-card border-top border-4 border-success">
+                    <p class="text-muted fst-italic">"Thank you, Bedazzled Facepainting, for making our festival so colorful and fun! The kids (and even some adults!) loved the face paintings. Excellent service!"</p>
+                    <div class="text-warning mb-2">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <h6 class="fw-bold mb-0" style="color: #98fb98;">Emily W.</h6>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact & Social Media -->
+    <section class="container py-5 my-5" id="contact" data-aos="fade-up">
+        <div class="glass-card p-4 p-md-5 overflow-hidden position-relative border-0 shadow-lg" style="background: rgba(255,255,255,0.85);">
+            <!-- Background absolute image with low opacity -->
+            <div class="position-absolute top-0 start-0 w-100 h-100 opacity-25" style="background-image: url('assets/background.jpeg'); background-size: cover; background-position: center; z-index: 0;"></div>
+            
+            <div class="row align-items-stretch justify-content-between position-relative" style="z-index: 1;">
+                <div class="col-lg-5 text-dark mb-5 mb-lg-0 text-center text-lg-start d-flex flex-column justify-content-center">
+                    <h2 class="display-6 fw-bold brand-font text-dark mb-4">Connect With Us on Social Media</h2>
+                    <p class="lead text-dark">Stay updated with our latest events and behind-the-scenes content. Join our community today!</p>
+                    <div class="d-flex gap-3 justify-content-center justify-content-lg-start mt-4">
+                        <a href="#" class="btn btn-dark rounded-circle d-flex align-items-center justify-content-center floating-3d" style="width: 50px; height: 50px;"><i class="fa-brands fa-instagram fs-4"></i></a>
+                        <a href="#" class="btn btn-dark rounded-circle d-flex align-items-center justify-content-center floating-3d" style="width: 50px; height: 50px; animation-delay: 0.2s;"><i class="fa-brands fa-facebook-f fs-4"></i></a>
+                        <a href="#" class="btn btn-dark rounded-circle d-flex align-items-center justify-content-center floating-3d" style="width: 50px; height: 50px; animation-delay: 0.4s;"><i class="fa-brands fa-tiktok fs-4"></i></a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="bg-white rounded-4 p-4 p-md-5 shadow-sm h-100 d-flex flex-column">
+                        <!-- Contact Info Header -->
+                        <div class="d-flex align-items-center mb-4">
+                             <img src="assets/logo.jpeg" alt="Logo" width="50" height="50" class="rounded-circle me-3 border" style="object-fit:cover;" />
+                             <div>
+                                 <h5 class="fw-bold mb-0 brand-font">Bedazzled Facepainting</h5>
+                                 <p class="text-muted small mb-0"><i class="fa-solid fa-phone me-1"></i> 082 618 2619</p>
+                             </div>
+                        </div>
+
+                        <!-- Contact Form -->
+                        <h4 class="fw-bold mb-3 brand-font">Contact Us</h4>
+                        <form>
+                            <div class="mb-3">
+                                <input type="text" class="form-control rounded-pill bg-light border-0 px-3 py-2" placeholder="Your name">
+                            </div>
+                            <div class="mb-3">
+                                <input type="email" class="form-control rounded-pill bg-light border-0 px-3 py-2" placeholder="Your email">
+                            </div>
+                            <div class="mb-3">
+                                <input type="text" class="form-control rounded-pill bg-light border-0 px-3 py-2" placeholder="Subject">
+                            </div>
+                            <div class="mb-4">
+                                <textarea class="form-control rounded-4 bg-light border-0 px-3 py-2" rows="4" placeholder="Your message (optional)"></textarea>
+                            </div>
+                            <button type="button" class="btn custom-btn rounded-pill w-100 py-3 mt-auto fs-5">Submit Message</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("initAOS");
+        }
+    }
+}

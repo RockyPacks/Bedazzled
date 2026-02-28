@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/backend/">
+    <Project Path="backend/Bedazzled.Api/Bedazzled.Api.csproj" />
+    <Project Path="backend/Bedazzled.Application/Bedazzled.Application.csproj" />
+    <Project Path="backend/Bedazzled.Domain/Bedazzled.Domain.csproj" />
+    <Project Path="backend/Bedazzled.Infrastructure/Bedazzled.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/frontend/">
+    <Project Path="frontend/Bedazzled.Client/Bedazzled.Client.csproj" />
+  </Folder>
+</Solution>

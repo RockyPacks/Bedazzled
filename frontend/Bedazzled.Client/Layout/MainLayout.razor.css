@@ -1,0 +1,10 @@
+/* Removed default Blazor templated layout styles as we moved to a responsive Bootstrap top-navbar */
+.page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+}

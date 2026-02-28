@@ -1,0 +1,40 @@
+﻿@inherits LayoutComponentBase
+
+<div class="page">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm px-4">
+        <a class="navbar-brand d-flex align-items-center floating-3d" href="/" style="animation: none; transition: transform 0.2s;">
+            <img src="assets/logo.jpeg" alt="Bedazzled Facepainting" height="40" class="me-2 rounded-circle shadow-sm" style="object-fit: cover;" />
+            <span class="fw-bold" style="font-family: 'Outfit', sans-serif; color: #333;">Bedazzled Facepainting</span>
+        </a>
+        <button class="navbar-toggler d-lg-none" type="button" onclick="document.getElementById('navbarContent').classList.toggle('show')">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
+            <ul class="navbar-nav mb-2 mb-lg-0 align-items-lg-center">
+                <li class="nav-item">
+                    <a class="nav-link text-dark fw-medium mx-2" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark fw-medium mx-2" href="#about">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark fw-medium mx-2" href="#services">Services</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark fw-medium mx-2" href="#contact">Contact</a>
+                </li>
+                <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
+                    <a class="btn custom-btn rounded-pill px-4" href="#contact">Book Now</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        @Body
+    </main>
+
+    <footer class="text-center py-4 text-dark mt-auto" style="background-color: #fce4ec;">
+        <p class="mb-0 fw-medium">© 2026 Bedazzled Facepainting. All rights reserved.</p>
+    </footer>
+</div>
