@@ -1,0 +1,117 @@
+@page "/booking"
+@using Bedazzled.Application.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Book Your Magic | Bedazzled Facepainting</PageTitle>
+
+<div class="bg-watercolor min-vh-100 py-5">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-down">
+            <h1 class="display-4 fw-bold brand-font text-gradient">Book Your Event</h1>
+            <p class="lead text-muted">Tell us about your celebration and let's make it colorful!</p>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8" data-aos="zoom-in">
+                <div class="glass-card p-4 p-md-5 shadow-lg border-0">
+                    <EditForm Model="booking" OnValidSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="alert alert-danger rounded-4 mb-4" />
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Your Name</label>
+                                <InputText @bind-Value="booking.Name" class="form-control rounded-pill bg-light border-0 px-4 py-3" placeholder="Enter your name" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Email Address</label>
+                                <InputText type="email" @bind-Value="booking.Email" class="form-control rounded-pill bg-light border-0 px-4 py-3" placeholder="email@example.com" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Event Type</label>
+                                <InputSelect @bind-Value="booking.EventType" class="form-select rounded-pill bg-light border-0 px-4 py-3">
+                                    <option value="">Select an event type...</option>
+                                    <option value="Birthday Party">Birthday Party</option>
+                                    <option value="Corporate Event">Corporate Event</option>
+                                    <option value="Festival/Fair">Festival or Fair</option>
+                                    <option value="Wedding">Wedding</option>
+                                    <option value="School Event">School Event</option>
+                                    <option value="Other">Other (Please specify in message)</option>
+                                </InputSelect>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Event Date</label>
+                                <InputDate @bind-Value="booking.EventDate" class="form-control rounded-pill bg-light border-0 px-4 py-3" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Message / Special Requirements</label>
+                                <InputTextArea @bind-Value="booking.Message" class="form-control rounded-4 bg-light border-0 px-4 py-3" rows="4" placeholder="Tell us more about your event (e.g., number of children, theme, etc.)" />
+                            </div>
+                        </div>
+
+                        <div class="mt-5 text-center">
+                            <button type="submit" class="btn custom-btn rounded-pill px-5 py-3 fs-5 floating-3d w-100 w-md-auto" disabled="@isSubmitting">
+                                @(isSubmitting ? "Sending Request..." : "Request Booking")
+                            </button>
+                            <br/>
+                            <a href="/" class="btn btn-link mt-3 text-muted">Back to Home</a>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(statusMessage))
+                        {
+                            <div class="mt-4 alert alert-@statusClass rounded-pill text-center py-3 fade-in">
+                                @statusMessage
+                            </div>
+                        }
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Booking booking = new() { EventDate = DateTime.Now.AddDays(7) };
+    private bool isSubmitting = false;
+    private string statusMessage = "";
+    private string statusClass = "";
+
+    private async Task HandleSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(booking.Name) || string.IsNullOrWhiteSpace(booking.Email))
+        {
+            statusMessage = "Please provide both name and email.";
+            statusClass = "warning";
+            return;
+        }
+
+        isSubmitting = true;
+        statusMessage = "";
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/bookings", booking);
+            if (response.IsSuccessStatusCode)
+            {
+                statusMessage = "Thank you! Your booking request has been sent. We'll contact you shortly.";
+                statusClass = "success";
+                booking = new() { EventDate = DateTime.Now.AddDays(7) }; // Reset
+            }
+            else
+            {
+                statusMessage = "Oops! Something went wrong on our end. Please try again later.";
+                statusClass = "danger";
+            }
+        }
+        catch (Exception)
+        {
+            statusMessage = "Connection error. Please make sure the backend is running.";
+            statusClass = "danger";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

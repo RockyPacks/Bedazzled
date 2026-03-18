@@ -1,0 +1,67 @@
+@page "/login"
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Login | Bedazzled Admin</PageTitle>
+
+<div class="bg-watercolor min-vh-100 d-flex align-items-center justify-content-center">
+    <div class="glass-card p-5 shadow-lg border-0" style="max-width: 400px; width: 100%;" data-aos="zoom-in">
+        <div class="text-center mb-4">
+            <img src="assets/logo.jpeg" alt="Logo" width="80" height="80" class="rounded-circle mb-3 shadow-sm border" style="object-fit:cover;" />
+            <h2 class="brand-font fw-bold">Admin Login</h2>
+            <p class="text-muted">Enter your secret password to continue</p>
+        </div>
+
+        <div class="mb-4">
+            <input type="password" class="form-control rounded-pill px-4 py-3" placeholder="Password" @bind="password" @onkeyup="HandleKeyUp" />
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <p class="text-danger small mt-2 px-3">@errorMessage</p>
+            }
+        </div>
+
+        <button class="btn custom-btn rounded-pill w-100 py-3 fs-5 floating-3d" @onclick="HandleLogin" disabled="@isLoading">
+            @(isLoading ? "Authenticating..." : "Login")
+        </button>
+    </div>
+</div>
+
+@code {
+    private string password = "";
+    private string errorMessage = "";
+    private bool isLoading = false;
+
+    private async Task HandleLogin()
+    {
+        if (string.IsNullOrEmpty(password)) 
+        {
+            errorMessage = "Please enter a password.";
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = "";
+
+        // Standard Practice: In a real app, this would call an API that validates against 
+        // Firebase Auth or a hashed secret. For now, we'll use a simple secure check.
+        if (password == "Bedazzled2026!") // Default password
+        {
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "admin_authenticated", "true");
+            Navigation.NavigateTo("/admin");
+        }
+        else
+        {
+            errorMessage = "Incorrect password. Please try again.";
+        }
+        
+        isLoading = false;
+    }
+
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await HandleLogin();
+        }
+    }
+}

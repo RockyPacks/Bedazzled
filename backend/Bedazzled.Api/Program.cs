@@ -1,12 +1,45 @@
+using Bedazzled.Application.Interfaces;
+using Bedazzled.Application.Services;
+using Bedazzled.Infrastructure.Repositories;
+using Google.Cloud.Firestore;
+
 var builder = WebApplication.CreateBuilder(args);
 
+// Firebase Setup
+var firebaseConfig = builder.Configuration.GetSection("Firebase");
+string projectId = firebaseConfig["ProjectId"] ?? throw new InvalidOperationException("Firebase ProjectId is not configured.");
+string keyPath = Path.Combine(builder.Environment.ContentRootPath, firebaseConfig["KeyPath"] ?? "firebase-key.json");
+
+builder.Services.AddSingleton(s => 
+{
+    return new FirestoreDbBuilder
+    {
+        ProjectId = projectId,
+        CredentialsPath = keyPath
+    }.Build();
+});
+
 // Add services to the container.
+builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+// Dependency Injection
+builder.Services.AddScoped<IBookingRepository, FirestoreBookingRepository>();
+builder.Services.AddScoped<IContactRepository, FirestoreContactRepository>();
+builder.Services.AddScoped<IReviewRepository, FirestoreReviewRepository>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IContactService, ContactService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+
+// Logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowBlazorClient",
-        b => b.WithOrigins("https://localhost:7121", "http://localhost:5285")
+    options.AddPolicy("AllowAll",
+        b => b.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod());
 });
@@ -19,32 +52,12 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
+app.UseCors("AllowAll");
 
-app.UseCors("AllowBlazorClient");
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.MapGet("/api/health", () => Results.Ok(new { Status = "Healthy", Time = DateTime.Now }));
+app.MapControllers();
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+

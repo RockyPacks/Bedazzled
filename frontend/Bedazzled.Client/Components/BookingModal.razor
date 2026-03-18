@@ -1,0 +1,142 @@
+@using Bedazzled.Application.Models
+@inject HttpClient Http
+
+@if (IsVisible)
+{
+    <div class="modal-backdrop fade show" @onclick="Close"></div>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" @onclick:stop>
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content glass-card border-0 shadow-2xl overflow-hidden animate-zoom-in">
+                <div class="modal-header border-0 pb-0 pe-4 pt-4">
+                    <button type="button" class="btn-close rounded-circle p-3 bg-light shadow-sm" @onclick="Close" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 p-md-5 pt-0">
+                    <div class="text-center mb-4">
+                        <div class="d-inline-block p-3 rounded-circle bg-light mb-3 shadow-sm">
+                            <i class="fa-solid fa-palette fs-1 text-gradient"></i>
+                        </div>
+                        <h2 class="brand-font fw-bold display-6">Book Your Magic</h2>
+                        <p class="text-muted">Tell us about your celebration and let's make it colorful!</p>
+                    </div>
+
+                    <EditForm Model="booking" OnValidSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="row g-4">
+                            <div class="col-md-6 text-start">
+                                <label class="form-label fw-bold small text-uppercase tracking-wider">
+                                    <i class="fa-solid fa-user me-2 text-muted opacity-75"></i>Your Name
+                                </label>
+                                <InputText @bind-Value="booking.Name" class="form-control rounded-pill bg-light border-0 px-4 py-3" placeholder="Enter your name" />
+                                <ValidationMessage For="@(() => booking.Name)" class="text-danger small px-3 mt-1" />
+                            </div>
+                            <div class="col-md-6 text-start">
+                                <label class="form-label fw-bold small text-uppercase tracking-wider">
+                                    <i class="fa-solid fa-envelope me-2 text-muted opacity-75"></i>Email Address
+                                </label>
+                                <InputText type="email" @bind-Value="booking.Email" class="form-control rounded-pill bg-light border-0 px-4 py-3" placeholder="email@example.com" />
+                                <ValidationMessage For="@(() => booking.Email)" class="text-danger small px-3 mt-1" />
+                            </div>
+                            <div class="col-md-6 text-start">
+                                <label class="form-label fw-bold small text-uppercase tracking-wider">
+                                    <i class="fa-solid fa-masks-theater me-2 text-muted opacity-75"></i>Event Type
+                                </label>
+                                <div class="position-relative">
+                                    <InputSelect @bind-Value="booking.EventType" class="form-select rounded-pill bg-light border-0 px-4 py-3 appearance-none">
+                                        <option value="">Select an event type...</option>
+                                        <option value="Birthday Party">Birthday Party</option>
+                                        <option value="Corporate Event">Corporate Event</option>
+                                        <option value="Festival/Fair">Festival or Fair</option>
+                                        <option value="Wedding">Wedding</option>
+                                        <option value="School Event">School Event</option>
+                                        <option value="Other">Other</option>
+                                    </InputSelect>
+                                </div>
+                                <ValidationMessage For="@(() => booking.EventType)" class="text-danger small px-3 mt-1" />
+                            </div>
+                            <div class="col-md-6 text-start">
+                                <label class="form-label fw-bold small text-uppercase tracking-wider">
+                                    <i class="fa-solid fa-calendar-day me-2 text-muted opacity-75"></i>Event Date
+                                </label>
+                                <InputDate @bind-Value="booking.EventDate" class="form-control rounded-pill bg-light border-0 px-4 py-3" />
+                                <ValidationMessage For="@(() => booking.EventDate)" class="text-danger small px-3 mt-1" />
+                            </div>
+                            <div class="col-12 text-start">
+                                <label class="form-label fw-bold small text-uppercase tracking-wider">
+                                    <i class="fa-solid fa-comment-dots me-2 text-muted opacity-75"></i>Special Requirements
+                                </label>
+                                <InputTextArea @bind-Value="booking.Message" class="form-control rounded-4 bg-light border-0 px-4 py-3" rows="3" placeholder="Tell us more about your event..." />
+                            </div>
+                        </div>
+
+                        <div class="mt-5 text-center">
+                            @if (showSuccess)
+                            {
+                                <div class="alert alert-success rounded-pill py-3 px-4 animate-fade-in mb-4">
+                                    <i class="fa-solid fa-check-circle me-2"></i> Magic sent! We'll contact you shortly.
+                                </div>
+                            }
+                            else if (!string.IsNullOrEmpty(errorMessage))
+                            {
+                                <div class="alert alert-danger rounded-pill py-3 px-4 animate-fade-in mb-4">
+                                    <i class="fa-solid fa-triangle-exclamation me-2"></i> @errorMessage
+                                </div>
+                            }
+
+                            <button type="submit" class="btn custom-btn rounded-pill px-5 py-3 fs-5 w-100 shadow-lg" disabled="@isSubmitting">
+                                @(isSubmitting ? "Creating Magic..." : "Request Booking Now")
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private Booking booking = new() { EventDate = DateTime.Now.AddDays(7) };
+    private bool isSubmitting = false;
+    private bool showSuccess = false;
+    private string? errorMessage;
+
+    private async Task Close()
+    {
+        showSuccess = false;
+        errorMessage = null;
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task HandleSubmit()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/bookings", booking);
+            if (response.IsSuccessStatusCode)
+            {
+                showSuccess = true;
+                booking = new() { EventDate = DateTime.Now.AddDays(7) };
+                await Task.Delay(2000);
+                await Close();
+            }
+            else
+            {
+                errorMessage = "Oops! Something went wrong. Please try again.";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "Connection error. Please check your internet.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

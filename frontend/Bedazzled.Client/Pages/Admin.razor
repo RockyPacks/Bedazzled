@@ -1,0 +1,176 @@
+@page "/admin"
+@using Bedazzled.Application.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Admin Dashboard | Bedazzled</PageTitle>
+
+<div class="bg-watercolor min-vh-100 py-5">
+    <div class="container">
+        @if (isAuthenticating)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-info" role="status">
+                    <span class="visually-hidden">Checking access...</span>
+                </div>
+                <p class="mt-3 text-muted brand-font">Verifying Magic Keys...</p>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex justify-content-between align-items-center mb-5" data-aos="fade-down">
+                <div>
+                    <h1 class="display-5 fw-bold brand-font text-gradient">Admin Dashboard</h1>
+                    <p class="text-muted">Manage your bookings and magic inquiries</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-dark rounded-pill px-4" @onclick="LoadData">
+                        <i class="fa-solid fa-sync me-2"></i> Refresh
+                    </button>
+                    <button class="btn btn-dark rounded-pill px-4" @onclick="Logout">
+                        <i class="fa-solid fa-sign-out me-2"></i> Logout
+                    </button>
+                </div>
+            </div>
+
+            @if (isLoading)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            }
+            else if (!string.IsNullOrEmpty(apiError))
+            {
+                <div class="alert alert-danger rounded-4 p-4 text-center mt-4">
+                    <i class="fa-solid fa-triangle-exclamation display-4 mb-3"></i>
+                    <h4>Something went wrong</h4>
+                    <p>@apiError</p>
+                    <button class="btn btn-outline-danger btn-sm rounded-pill mt-2" @onclick="LoadData">Try Again</button>
+                </div>
+            }
+            else if (bookings == null || !bookings.Any())
+            {
+                <div class="glass-card p-5 text-center" data-aos="fade-up">
+                    <i class="fa-solid fa-calendar-xmark display-1 text-muted mb-4"></i>
+                    <h3>No bookings found yet.</h3>
+                    <p class="text-muted">Once clients start booking, they will appear here.</p>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4" data-aos="fade-up">
+                    @foreach (var booking in bookings.OrderByDescending(b => b.EventDate))
+                    {
+                        <div class="col-md-6 col-lg-4">
+                            <div class="glass-card p-4 h-100 shadow-sm border-0 position-relative overflow-hidden">
+                                <div class="position-absolute top-0 end-0 p-3">
+                                    <span class="badge rounded-pill bg-info text-dark">@(booking.EventDate.ToString("MMM dd, yyyy"))</span>
+                                </div>
+                                <h4 class="fw-bold brand-font mb-2">@booking.Name</h4>
+                                <p class="text-muted small mb-3">
+                                    <i class="fa-solid fa-envelope me-2"></i> @booking.Email
+                                </p>
+                                <hr class="opacity-10" />
+                                <div class="mb-3">
+                                    <span class="fw-bold small text-uppercase text-muted d-block mb-1">Event Type</span>
+                                    <span class="badge bg-light text-dark border">@booking.EventType</span>
+                                </div>
+                                <div>
+                                    <span class="fw-bold small text-uppercase text-muted d-block mb-1">Notes</span>
+                                    <p class="small text-dark mb-0 italic">"@booking.Message"</p>
+                                </div>
+                                <div class="mt-4 pt-2 border-top border-light d-flex gap-2">
+                                    <a href="mailto:@booking.Email" class="btn btn-sm btn-dark rounded-pill px-3">Contact Client</a>
+                                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3" @onclick="() => DeleteBooking(booking.Id)">
+                                        <i class="fa-solid fa-trash-can me-1"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private List<Booking>? bookings;
+    private bool isLoading = true;
+    private bool isAuthenticating = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try 
+            {
+                var auth = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "admin_authenticated");
+                if (auth != "true")
+                {
+                    Navigation.NavigateTo("/login");
+                }
+                else
+                {
+                    isAuthenticating = false;
+                    StateHasChanged();
+                    await LoadData();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Auth Error: {ex.Message}");
+                Navigation.NavigateTo("/login");
+            }
+        }
+    }
+
+    private string? apiError;
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        apiError = null;
+        StateHasChanged();
+        
+        try
+        {
+            bookings = await Http.GetFromJsonAsync<List<Booking>>("api/bookings");
+        }
+        catch (Exception ex)
+        {
+            apiError = $"Connection Error: {ex.Message}";
+            Console.WriteLine($"Error loading bookings: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteBooking(string id)
+    {
+        if (bookings == null) return;
+
+        var confirmed = await Http.DeleteAsync($"api/bookings/{id}");
+        if (confirmed.IsSuccessStatusCode)
+        {
+            var itemToRemove = bookings.FirstOrDefault(b => b.Id == id);
+            if (itemToRemove != null)
+            {
+                bookings.Remove(itemToRemove);
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task Logout()
+    {
+        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "admin_authenticated");
+        Navigation.NavigateTo("/login");
+    }
+}
