@@ -9,5 +9,6 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5175/") });
 builder.Services.AddSingleton<ModalService>();
+builder.Services.AddScoped<AdminAuthService>();
 
 await builder.Build().RunAsync();

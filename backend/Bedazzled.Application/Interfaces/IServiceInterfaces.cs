@@ -8,6 +8,7 @@ public interface IBookingService
     Task<Booking?> GetBookingByIdAsync(string id);
     Task<string> CreateBookingAsync(Booking booking);
     Task DeleteBookingAsync(string id);
+    Task<AdminAnalytics> GetAnalyticsAsync();
 }
 
 public interface IContactService

@@ -1,0 +1,126 @@
+@using Bedazzled.Application.Models
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+<div class="modal-backdrop @(IsVisible ? "show d-block" : "d-none")" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 1050;"></div>
+
+<div class="modal fade @(IsVisible ? "show d-block" : "")" tabindex="-1" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-2xl rounded-4 overflow-hidden">
+            <div class="modal-header border-0 bg-gradient text-white p-4" style="background: linear-gradient(135deg, #6f42c1, #e83e8c);">
+                <h5 class="modal-title brand-font fs-3"><i class="fa-solid fa-star me-2"></i> Share Your Magic Experience</h5>
+                <button type="button" class="btn-close btn-close-white" @onclick="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                @if (isSuccess)
+                {
+                    <div class="text-center py-5 animate-bounce-in">
+                        <div class="display-1 text-success mb-4"><i class="fa-solid fa-circle-check"></i></div>
+                        <h3 class="fw-bold brand-font">Thank You!</h3>
+                        <p class="text-muted">Your review has been submitted successfully. We appreciate your feedback!</p>
+                        <button class="btn btn-dark rounded-pill px-5 mt-4" @onclick="Close">Close</button>
+                    </div>
+                }
+                else
+                {
+                    <EditForm Model="review" OnValidSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="mb-4 text-center">
+                            <label class="form-label d-block text-muted mb-2">How would you rate your experience?</label>
+                            <div class="rating-stars fs-2">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    var starIndex = i;
+                                    <i class="@(review.Rating >= i ? "fa-solid" : "fa-regular") fa-star text-warning cursor-pointer" 
+                                       @onclick="() => SetRating(starIndex)" 
+                                       style="cursor: pointer; transition: transform 0.2s;"
+                                       onmouseover="this.style.transform='scale(1.2)'"
+                                       onmouseout="this.style.transform='scale(1)'"></i>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Your Name</label>
+                            <InputText class="form-control border-0 bg-white shadow-sm rounded-pill px-3 py-2" @bind-Value="review.Author" placeholder="e.g. Sarah J." />
+                            <ValidationMessage For="@(() => review.Author)" class="text-danger small" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Role / Title (Optional)</label>
+                            <InputText class="form-control border-0 bg-white shadow-sm rounded-pill px-3 py-2" @bind-Value="review.Subtitle" placeholder="e.g. Birthday Mom, Event Manager" />
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Your Review</label>
+                            <InputTextArea class="form-control border-0 bg-white shadow-sm rounded-4 px-3 py-2" rows="4" @bind-Value="review.Content" placeholder="Tell us about the magic we brought to your event..." />
+                            <ValidationMessage For="@(() => review.Content)" class="text-danger small" />
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary rounded-pill py-3 fs-5 fw-bold border-0 shadow-lg floating-3d" disabled="@isSubmitting" style="background: linear-gradient(135deg, #6f42c1, #e83e8c);">
+                                @(isSubmitting ? "Submitting..." : "Post Review")
+                            </button>
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger mt-3 rounded-pill text-center py-2 animate-fade-in">
+                                @errorMessage
+                            </div>
+                        }
+                    </EditForm>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private Review review = new();
+    private bool isSubmitting = false;
+    private bool isSuccess = false;
+    private string errorMessage = "";
+
+    private void SetRating(int rating) => review.Rating = rating;
+
+    private async Task HandleSubmit()
+    {
+        isSubmitting = true;
+        errorMessage = "";
+        
+        try 
+        {
+            review.Date = DateTime.UtcNow;
+            var response = await Http.PostAsJsonAsync("api/reviews", review);
+            if (response.IsSuccessStatusCode)
+            {
+                isSuccess = true;
+                StateHasChanged();
+            }
+            else
+            {
+                errorMessage = "Oops! Something went wrong. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Connection error: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task Close()
+    {
+        isSuccess = false;
+        review = new();
+        await OnClose.InvokeAsync();
+    }
+}

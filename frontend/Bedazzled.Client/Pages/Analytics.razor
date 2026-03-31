@@ -1,0 +1,188 @@
+@page "/admin/analytics"
+@using Bedazzled.Application.Models
+@inject AdminAuthService AdminAuth
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Analytics | Bedazzled</PageTitle>
+
+<div class="bg-watercolor min-vh-100 py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-5" data-aos="fade-down">
+            <div>
+                <h1 class="display-5 fw-bold brand-font text-gradient">Magic Insights</h1>
+                <p class="text-muted">Analytics and trends for your business</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-dark rounded-pill px-4" @onclick="GoBack">
+                    <i class="fa-solid fa-arrow-left me-2"></i> Back to Dashboard
+                </button>
+            </div>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        }
+        else if (analytics == null)
+        {
+            <div class="alert alert-danger rounded-4 p-4 text-center mt-4">
+                <i class="fa-solid fa-triangle-exclamation display-4 mb-3"></i>
+                <h4>Failed to load analytics</h4>
+                <p>Please try again later.</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4 mb-5" data-aos="fade-up">
+                <!-- Total Bookings Card -->
+                <div class="col-md-4">
+                    <div class="glass-card p-4 text-center h-100 d-flex flex-column justify-content-center">
+                        <i class="fa-solid fa-calendar-check text-info display-4 mb-3"></i>
+                        <h3 class="display-4 fw-bold mb-0">@analytics.TotalBookings</h3>
+                        <p class="text-muted text-uppercase small ls-wide">Total Bookings</p>
+                    </div>
+                </div>
+
+                <!-- Popular Event Types -->
+                <div class="col-md-8">
+                    <div class="glass-card p-4 h-100">
+                        <h5 class="fw-bold mb-4 brand-font"><i class="fa-solid fa-star text-warning me-2"></i> Popular Event Types</h5>
+                        <div class="d-flex flex-column gap-3">
+                            @foreach (var eventType in analytics.PopularEventTypes.OrderByDescending(x => x.Value))
+                            {
+                                <div>
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="small fw-bold">@eventType.Key</span>
+                                        <span class="small text-muted">@eventType.Value bookings</span>
+                                    </div>
+                                    <div class="progress rounded-pill" style="height: 10px; background-color: rgba(0,0,0,0.05);">
+                                        <div class="progress-bar bg-info" role="progressbar" 
+                                             style="width: @(CalculatePercentage(eventType.Value))%;" 
+                                             aria-valuenow="@CalculatePercentage(eventType.Value)" 
+                                             aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" data-aos="fade-up" data-aos-delay="100">
+                <!-- Monthly Trends -->
+                <div class="col-12">
+                    <div class="glass-card p-4">
+                        <h5 class="fw-bold mb-4 brand-font"><i class="fa-solid fa-chart-line text-primary me-2"></i> Monthly Trends</h5>
+                        <div class="position-relative" style="height: 250px; display: flex; align-items: flex-end; justify-content: space-around; padding-bottom: 30px; border-bottom: 2px solid rgba(0,0,0,0.05); margin-bottom: 20px;">
+                            @foreach (var trend in analytics.MonthlyTrends)
+                            {
+                                <div class="text-center" style="flex: 1; max-width: 60px;">
+                                    <div class="bg-gradient-primary rounded-top position-relative" 
+                                         style="height: @(CalculateTrendHeight(trend.Count))px; transition: height 1s ease;">
+                                        <div class="position-absolute top-0 start-50 translate-middle-x mt-n4">
+                                            <span class="badge bg-dark rounded-pill small">@trend.Count</span>
+                                        </div>
+                                    </div>
+                                    <div class="position-absolute pt-2 start-50 translate-middle-x" style="bottom: -30px; white-space: nowrap;">
+                                        <span class="text-muted x-small">@trend.Month</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .ls-wide { letter-spacing: 0.1em; }
+    .x-small { font-size: 0.7rem; }
+    .mt-n4 { margin-top: -1.5rem; }
+    .bg-gradient-primary {
+        background: linear-gradient(180deg, #6fdce3 0%, #48c6ef 100%);
+    }
+</style>
+
+@code {
+    private AdminAnalytics? analytics;
+    private bool isLoading = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (!await AdminAuth.HasValidSessionAsync())
+            {
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                await LoadAnalytics();
+            }
+        }
+    }
+
+    private async Task LoadAnalytics()
+    {
+        isLoading = true;
+        try
+        {
+            var request = await AdminAuth.CreateAuthorizedRequestAsync(HttpMethod.Get, "api/admin/analytics");
+            if (request is null)
+            {
+                await AdminAuth.LogoutAsync();
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            using (request)
+            {
+                using var response = await Http.SendAsync(request);
+                if (response.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)
+                {
+                    await AdminAuth.LogoutAsync();
+                    Navigation.NavigateTo("/login");
+                    return;
+                }
+
+                response.EnsureSuccessStatusCode();
+                analytics = await response.Content.ReadFromJsonAsync<AdminAnalytics>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading analytics: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private int CalculatePercentage(int count)
+    {
+        if (analytics == null || analytics.TotalBookings == 0) return 0;
+        return (int)((double)count / analytics.TotalBookings * 100);
+    }
+
+    private int CalculateTrendHeight(int count)
+    {
+        if (analytics == null || !analytics.MonthlyTrends.Any()) return 0;
+        var max = analytics.MonthlyTrends.Max(t => t.Count);
+        if (max == 0) return 0;
+        return (int)((double)count / max * 180); // Max height 180px
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/admin");
+    }
+}

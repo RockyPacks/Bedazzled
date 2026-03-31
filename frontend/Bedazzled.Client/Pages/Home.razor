@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @using Bedazzled.Client.Services
 @inject IJSRuntime JSRuntime
 @inject HttpClient Http
@@ -115,6 +115,10 @@
                         </div>
                     </div>
                 }
+            </div>
+
+            <div class="text-center mt-5" data-aos="fade-up">
+                <button @onclick="ModalService.ShowReviewModal" class="btn btn-outline-primary rounded-pill px-5 py-2 fw-bold">Leave a Review</button>
             </div>
         }
     </section>

@@ -3,6 +3,7 @@
   <ItemGroup>
     <PackageReference Include="Google.Cloud.Firestore" Version="4.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.3" />
+    <PackageReference Include="Resend" Version="0.2.2" />
     <ProjectReference Include="..\Bedazzled.Application\Bedazzled.Application.csproj" />
   </ItemGroup>
  

@@ -50,6 +50,15 @@ public class FirestoreBookingRepository : IBookingRepository
 
     public async Task AddAsync(Booking booking)
     {
+        if (booking.EventDate.Kind == DateTimeKind.Unspecified)
+        {
+            booking.EventDate = DateTime.SpecifyKind(booking.EventDate, DateTimeKind.Utc);
+        }
+        else if (booking.EventDate.Kind == DateTimeKind.Local)
+        {
+            booking.EventDate = booking.EventDate.ToUniversalTime();
+        }
+        
         var docRef = _db.Collection(CollectionName).Document();
         await docRef.SetAsync(booking);
         booking.Id = docRef.Id;
@@ -102,6 +111,15 @@ public class FirestoreReviewRepository : IReviewRepository
 
     public async Task AddAsync(Review review)
     {
+        if (review.Date.Kind == DateTimeKind.Unspecified)
+        {
+            review.Date = DateTime.SpecifyKind(review.Date, DateTimeKind.Utc);
+        }
+        else if (review.Date.Kind == DateTimeKind.Local)
+        {
+            review.Date = review.Date.ToUniversalTime();
+        }
+
         var docRef = _db.Collection(CollectionName).Document();
         await docRef.SetAsync(review);
         review.Id = docRef.Id;

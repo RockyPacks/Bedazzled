@@ -1,4 +1,4 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @implements IDisposable
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
@@ -37,6 +37,7 @@
     </nav>
 
     <BookingModal IsVisible="@ModalService.IsBookingModalVisible" OnClose="ModalService.HideBookingModal" />
+    <ReviewModal IsVisible="@ModalService.IsReviewModalVisible" OnClose="ModalService.HideReviewModal" />
 
     <main>
         @Body

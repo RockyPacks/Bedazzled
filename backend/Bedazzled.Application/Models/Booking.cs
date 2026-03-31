@@ -25,7 +25,7 @@ public class Booking
 
     [FirestoreProperty]
     [Required(ErrorMessage = "Event date is required")]
-    public DateTime EventDate { get; set; } = DateTime.Now.AddDays(7);
+    public DateTime EventDate { get; set; } = DateTime.UtcNow.AddDays(7);
 
     [FirestoreProperty]
     public string Message { get; set; } = string.Empty;
