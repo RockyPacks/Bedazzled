@@ -1,7 +1,9 @@
 using Bedazzled.Application.Interfaces;
 using Bedazzled.Application.Services;
+using Bedazzled.Api.Services;
 using Bedazzled.Infrastructure.Repositories;
 using Google.Cloud.Firestore;
+using Resend;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +17,7 @@ builder.Services.AddSingleton(s =>
     return new FirestoreDbBuilder
     {
         ProjectId = projectId,
-        CredentialsPath = keyPath
+        GoogleCredential = Google.Apis.Auth.OAuth2.GoogleCredential.FromFile(keyPath)
     }.Build();
 });
 
@@ -27,6 +29,21 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<IBookingRepository, FirestoreBookingRepository>();
 builder.Services.AddScoped<IContactRepository, FirestoreContactRepository>();
 builder.Services.AddScoped<IReviewRepository, FirestoreReviewRepository>();
+builder.Services.AddHttpClient<IFirebaseAdminAuthService, FirebaseAdminAuthService>();
+
+// Resend Setup
+var resendApiKey = builder.Configuration["Resend:ApiKey"]
+    ?? throw new InvalidOperationException("Resend:ApiKey is not configured. Set it with user-secrets or the Resend__ApiKey environment variable.");
+
+builder.Services.AddOptions();
+builder.Services.AddHttpClient<ResendClient>();
+builder.Services.Configure<ResendClientOptions>(o =>
+{
+    o.ApiToken = resendApiKey;
+});
+builder.Services.AddTransient<IResend, ResendClient>();
+
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IContactService, ContactService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
@@ -49,6 +66,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.MapOpenApi();
 }
 
@@ -59,5 +77,3 @@ app.MapGet("/api/health", () => Results.Ok(new { Status = "Healthy", Time = Date
 app.MapControllers();
 
 app.Run();
-
-

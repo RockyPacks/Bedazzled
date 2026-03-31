@@ -1,8 +1,8 @@
 @page "/admin"
 @using Bedazzled.Application.Models
+@inject AdminAuthService AdminAuth
 @inject HttpClient Http
 @inject NavigationManager Navigation
-@inject IJSRuntime JSRuntime
 
 <PageTitle>Admin Dashboard | Bedazzled</PageTitle>
 
@@ -25,6 +25,9 @@
                     <p class="text-muted">Manage your bookings and magic inquiries</p>
                 </div>
                 <div class="d-flex gap-2">
+                    <button class="btn btn-primary rounded-pill px-4" @onclick='() => Navigation.NavigateTo("/admin/analytics")'>
+                        <i class="fa-solid fa-chart-column me-2"></i> Analytics
+                    </button>
                     <button class="btn btn-outline-dark rounded-pill px-4" @onclick="LoadData">
                         <i class="fa-solid fa-sync me-2"></i> Refresh
                     </button>
@@ -106,10 +109,9 @@
     {
         if (firstRender)
         {
-            try 
+            try
             {
-                var auth = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "admin_authenticated");
-                if (auth != "true")
+                if (!await AdminAuth.HasValidSessionAsync())
                 {
                     Navigation.NavigateTo("/login");
                 }
@@ -135,10 +137,28 @@
         isLoading = true;
         apiError = null;
         StateHasChanged();
-        
+
         try
         {
-            bookings = await Http.GetFromJsonAsync<List<Booking>>("api/bookings");
+            var request = await AdminAuth.CreateAuthorizedRequestAsync(HttpMethod.Get, "api/bookings");
+            if (request is null)
+            {
+                await Logout();
+                return;
+            }
+
+            using (request)
+            {
+                using var response = await Http.SendAsync(request);
+                if (response.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)
+                {
+                    await Logout();
+                    return;
+                }
+
+                response.EnsureSuccessStatusCode();
+                bookings = await response.Content.ReadFromJsonAsync<List<Booking>>();
+            }
         }
         catch (Exception ex)
         {
@@ -156,21 +176,37 @@
     {
         if (bookings == null) return;
 
-        var confirmed = await Http.DeleteAsync($"api/bookings/{id}");
-        if (confirmed.IsSuccessStatusCode)
+        var request = await AdminAuth.CreateAuthorizedRequestAsync(HttpMethod.Delete, $"api/bookings/{id}");
+        if (request is null)
         {
-            var itemToRemove = bookings.FirstOrDefault(b => b.Id == id);
-            if (itemToRemove != null)
+            await Logout();
+            return;
+        }
+
+        using (request)
+        {
+            using var confirmed = await Http.SendAsync(request);
+            if (confirmed.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)
             {
-                bookings.Remove(itemToRemove);
-                StateHasChanged();
+                await Logout();
+                return;
+            }
+
+            if (confirmed.IsSuccessStatusCode)
+            {
+                var itemToRemove = bookings.FirstOrDefault(b => b.Id == id);
+                if (itemToRemove != null)
+                {
+                    bookings.Remove(itemToRemove);
+                    StateHasChanged();
+                }
             }
         }
     }
 
     private async Task Logout()
     {
-        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "admin_authenticated");
+        await AdminAuth.LogoutAsync();
         Navigation.NavigateTo("/login");
     }
 }
